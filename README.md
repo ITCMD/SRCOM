@@ -1,5 +1,5 @@
 # Simple-Radio-COM
- Controls a Radio connected via COM such as with a Digirig Mobile
+ Simple-Radio-COM or SMCOM Controls a Radio connected via COM such as with a Digirig Mobile, allowing direct PTT control, transmitting and scheduling pre-recorded audio, and sending TTS in the program or via scripts!
 
 
 ![Preview](https://i.imgur.com/gpzGNt8.png)
