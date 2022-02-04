@@ -1,0 +1,8 @@
+@set "COMPort=COM5"
+@set "Timeout=60"
+@set "RadioInput=10"
+@set "InputName= VoiceMeeter Input (VB-Audio VoiceMeeter VAIO)"
+@set "voice=1"
+@set "voice.rate=3"
+@set "voice.volume=100"
+@set "callsign=W1BTR"
