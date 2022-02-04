@@ -828,21 +828,9 @@ echo.
 echo Convert with ffmpeg?
 choice
 if %errorlevel%==2 goto mainmenu
-echo 1] Convert to WAV (for high bitrate files)
-echo 2] Convert to mp3 (for medium bitrate files)
-echo x] Cancel
-choice /c 12x
-if %errorlevel%==3 goto mainmenu
-if %errorlevel%==2 (
-    color 07
-    ffmpeg -i -y "%file:"=%" "%file:"=%.mp3" >nul
-    set file=%file:"=%.mp3
-)
-if %errorlevel%==1 (
-    color 07
-    ffmpeg -i -y "%file:"=%" "%file:"=%.wav" >nul
-    set file=%file:"=%.wav
-)
+color 07
+ffmpeg -i -y "%file:"=%" "%file:"=%.wav" >nul
+set file=%file:"=%.wav
 color 0f
 goto returnfromconvert
 
