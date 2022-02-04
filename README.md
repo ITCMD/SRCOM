@@ -32,6 +32,10 @@ All of the program is written open source or using open source tools except for 
 - [SoundPlayer](https://github.com/MichielP1807/AHKSoundToDevicePlayer) (To play sound to specific output).
 - [ffmpeg](https://www.ffmpeg.org/) to convert audio files to WAV.
 
+# Installation
+
+To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-COM/releases) page and download the latest release. Unzip it where you want, and run Simple-Radio-COM.bat. No admin access or special install required!
+
 # Links
 ## https://w1btr.com
 ## https://programs.lucas-elliott.com
