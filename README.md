@@ -1,5 +1,5 @@
 # Simple-Radio-COM
- Controls a Radio connected via COM such as with a Digirig Mobile
+ Simple-Radio-COM or SMCOM Controls a Radio connected via COM such as with a Digirig Mobile, allowing direct PTT control, transmitting and scheduling pre-recorded audio, and sending TTS in the program or via scripts!
 
 
 ![Preview](https://i.imgur.com/gpzGNt8.png)
@@ -31,6 +31,10 @@ All of the program is written open source or using open source tools except for 
 3rd party open-source tools used:
 - [SoundPlayer](https://github.com/MichielP1807/AHKSoundToDevicePlayer) (To play sound to specific output).
 - [ffmpeg](https://www.ffmpeg.org/) to convert audio files to WAV.
+
+# Installation
+
+To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-COM/releases) page and download the latest release. Unzip it where you want, and run Simple-Radio-COM.bat. No admin access or special install required!
 
 # Links
 ## https://w1btr.com
