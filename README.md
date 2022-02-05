@@ -40,6 +40,11 @@ All of the program is written open source or using open source tools except for 
 
 # Installation
 
+This program requires voicemeeter banana or potato to work: https://vb-audio.com/Voicemeeter/banana.htm
+
+If you are using a digirig and havnt set it up yet (and you dont see it in the COM ports section of device manager), make sure you download the drivers at https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers
+Once downloaded, extract them and install the drivers by selecting the whole folder as the source of the drivers in device manager.
+
 To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-COM/releases) page and download the latest release. Unzip it where you want, and run Simple-Radio-COM.bat. No admin access or special install required!
 
 # Links
