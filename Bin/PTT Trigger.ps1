@@ -4,7 +4,7 @@ $comp = $args[0]
 $timeoutvar = $args[1]
 #$comp = "com5"
 $port = new-object system.io.ports.serialport $comp
-Write-Output "Opening Connection to COM device over port $comp. Timeout is $timeout."
+Write-Output "Opening Connection to COM device over port $comp. Timeout is $timeoutvar."
 $port.open()
 
 while($true){

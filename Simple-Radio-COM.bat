@@ -1,5 +1,5 @@
 @echo off
-rem version 1.4
+set vrs=4
 Setlocal EnableDelayedExpansion
 set Console=False
 if not "%~1"=="" set Console=True
@@ -186,17 +186,20 @@ for /f "tokens=1* delims=" %%A in ('powershell -File "CompareDateToNow.ps1" "%st
     )
 )
 echo Starting TX
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
 timeout /t 1 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\BeforeTX\%%~a"
     )
 )
 call "playsound.exe" "%file%" %RadioInput%
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\AfterTX\%%~a"
     )
 )
 echo Stopping TX
@@ -227,17 +230,20 @@ echo converting file
 call ffmpeg -y -i "%source%" "%cd%\%session%.wav" 
 set file=%session%.wav
 echo Starting TX
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
 timeout /t 1 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\BeforeTX\%%~a"
     )
 )
 call "playsound.exe" "%file%" %RadioInput%
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\AfterTX\%%~a"
     )
 )
 echo Stopping TX
@@ -272,17 +278,20 @@ del /f /q tts%session%.vbs
 set file=Audio%session%.wav
 if not "%~3"=="" set RadioInput=%~3
 echo Starting TX
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
 timeout /t 1 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\BeforeTX\%%~a"
     )
 )
 call "playsound.exe" "%file%" %RadioInput%
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\AfterTX\%%~a"
     )
 )
 echo Stopping TX
@@ -336,7 +345,7 @@ echo.
 set /p plugin=">"
 if /i "%plugin%"=="x" goto mainmenu
 if exist "Plugins\!plugin%plugin%!" (
-    call "Plugins\!plugin%plugin%!"
+    call "Plugins\!plugin%plugin%!" "%vrs%"
     goto plugins
 ) ELSE (
     echo Invalid.
@@ -401,13 +410,17 @@ echo.
 echo TO FORCE STOP TRANSMISSION CLOSE POWERSHELL WINODW
 echo.
 echo DISTRESS MODE DISTRESS MODE DISTRESS MDOE.
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
 timeout /t 1 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
+echo [102;31m[ON AIR][0m
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\BeforeTX\%%~a"
     )
 )
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
@@ -419,7 +432,7 @@ timeout /t 1 /nobreak >nul
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\AfterTX\%%~a"
     )
 )
 echo Stopping TX
@@ -532,13 +545,16 @@ echo.
 echo TO FORCE STOP TRANSMISSION CLOSE POWERSHELL WINODW
 echo.
 echo DISTRESS MODE DISTRESS MODE DISTRESS MDOE.
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
 timeout /t 1 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\BeforeTX\%%~a"
     )
 )
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
@@ -548,7 +564,7 @@ timeout /t 1 /nobreak >nul
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
-        call %%a
+        call "PluginFiles\AfterTX\%%~a"
     )
 )
 echo Stopping TX
@@ -733,12 +749,11 @@ echo [92mBasic Transmit mode[0m
 echo Transmission Timeout is %Timeout% seconds.
 echo.
 echo [96mNote: This device only controls PTT. While other modes output audio to the
-echo radio this mode cannot forward audio. It is recommended that you use Voicemeeter 
+echo radio this mode cannot forward audio. It is recommended that you use Voicemeeter
 echo or another mixer to send your microphone's output to the radio input.
 echo.
 echo Toggle PTT with the Space bar. Press X or Backspace to quit.
-echo.
-echo Use number 0-9 for DTMF. USe - for * and = for #, or use * and / on a numberpad.
+echo Use number 0-9,#,* for DTMF. Alternative * is - / # is =.
 echo.
 :kbdloopbasic
 call kbd.exe
@@ -747,12 +762,16 @@ if %_kbd%==120 goto mainmenu
 if %_kbd%==8 goto mainmenu
 if %_kbd%==113 goto mainmenu
 if not %_kbd%==32 goto kbdloopbasic
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo.>Transmit
 color e0
 timeout /t 1 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 color 60
+echo [102;31m[ON AIR][0m
 :txkbdloopbasic
 call kbd.exe
 if %errorlevel%==49 call "playsound.exe" "DTMF\Dtmf-1.wav" %RadioInput% >nul
@@ -778,7 +797,7 @@ if %errorlevel%==32 (
         timeout /t 1 /nobreak >nul
         color 0f
         title Simple Radio COM by W1BTR
-        goto kbdloopbasic
+        goto :basic
 )
 if %errorlevel%==120 (
         if exist Transmit del /f /q Transmit
@@ -872,7 +891,11 @@ echo.
 echo TO FORCE STOP TRANSMISSION CLOSE POWERSHELL WINODW
 echo.
 echo Will take %_total% seconds to transmit.
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
+echo [102;31m[ON AIR][0m
 timeout /t 1 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
@@ -992,7 +1015,11 @@ echo.
 echo TO FORCE STOP TRANSMISSION CLOSE POWERSHELL WINODW
 echo.
 echo Will take %_total% seconds to transmit.
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
+echo [102;31m[ON AIR][0m
 timeout /t 1 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
@@ -1128,7 +1155,11 @@ echo.
 echo TO FORCE STOP TRANSMISSION CLOSE POWERSHELL WINODW
 echo.
 echo Will take %_total% seconds to transmit.
+set cancel=False
+if exist BeforeTX.cmd call BeforeTX.cmd
+if %cancel%==True goto :mainmenu
 echo. >Transmit
+echo [102;31m[ON AIR][0m
 timeout /t 1 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
