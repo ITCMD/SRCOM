@@ -14,12 +14,17 @@
 6. Simple Distress mode to send out looped distress signal
 7. Set output device independant of system default
 
+# Plugins
+
+1. SMCOM supports third party plugins with a plugin menu. These can be added to Bin\Plugins.
+2. SMCOM plugins can place .cmd files in BeforeTX, OnStartTX, and AfterTX, and they will be run accordingly.
+3. SMCOM comes with a roger beep plugin, a callsign ID plugin, and a **busy channel lockout plugin.** (note: Busy channel lockout plugin requires voicemeeter macros).
+
 # Notes
 
 - Made for use with a [Digirig](https://digirig.net/), a cheap device that allows interfacing with radios that do not have serial or digital connection.
 - Should work with any COM based PTT trigger and soundcard setup
-- Does not support busy-channel lockout at this time. If anyone has a command-line usable tool that can listen to a specific input device to see if any audio is playing, I'd be able to impliment that.
-- **Update:** I am currently working on a feature that works with Voicemeeter which, if the radio is receiving audio, will wait until there is a break of x seconds.
+- Busy Channel Lockout Plugin Requires Voicemeeter.
 - Designed and tested with [Voicemeeter](https://voicemeeter.com/) setup in mind.
 
 ## Example [Voicemeeter](https://voicemeeter.com/) setup:
