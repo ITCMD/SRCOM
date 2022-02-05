@@ -1,5 +1,5 @@
 @echo off
-rem version 1.2
+rem version 1.4
 Setlocal EnableDelayedExpansion
 set Console=False
 if not "%~1"=="" set Console=True
@@ -34,8 +34,10 @@ for /f "tokens=1,2 delims=: skip=4" %%A in ('playsound AudioFiles\Calibrate.mp3 
 )
 )
 :PassAudioCheck
-call ps1s.bat /ts "Simple Radio COM Ps1 Serial Interface"
-if %errorlevel%==1 start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %Timeout%
+echo Self-Check Pass
+call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface"
+echo Launching PTT PS1 Script
+start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %Timeout%
 goto mainmenu
 
 :firsttimesetup
@@ -91,6 +93,14 @@ echo.
 echo [92mThat's it for the initial setup![0m
 echo But there are more settings to explore in the settings menu, such
 echo as the TTS voice, voice speed, and voice volume, or timeout settings.
+echo @set "COMPort=%COMPort%">settings.cmd
+echo @set "Timeout=%Timeout%">>settings.cmd
+echo @set "RadioInput=%RadioInput%">>settings.cmd
+echo @set "InputName=%InputName%">>settings.cmd
+echo @set "voice=%voice%">>settings.cmd
+echo @set "voice.rate=%voice.rate%">>settings.cmd
+echo @set "voice.volume=%voice.volume%">>settings.cmd
+echo @set "callsign=%callsign%">>settings.cmd
 echo.
 pause
 goto mainmenu
@@ -178,9 +188,17 @@ for /f "tokens=1* delims=" %%A in ('powershell -File "CompareDateToNow.ps1" "%st
 echo Starting TX
 echo. >Transmit
 timeout /t 1 /nobreak >nul
-if exist OnStartTX.cmd call OnStartTX.cmd
+if exist "PluginFiles\BeforeTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 call "playsound.exe" "%file%" %RadioInput%
-if exist OnEndTX.cmd call OnEndTX.cmd
+if exist "PluginFiles\AfterTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 echo Stopping TX
 set premature=False
 if not exist Transmit echo ### WARNING: Transmission was stopped before message is finished. Raise timeout.
@@ -211,9 +229,17 @@ set file=%session%.wav
 echo Starting TX
 echo. >Transmit
 timeout /t 1 /nobreak >nul
-if exist OnStartTX.cmd call OnStartTX.cmd
+if exist "PluginFiles\BeforeTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 call "playsound.exe" "%file%" %RadioInput%
-if exist OnEndTX.cmd call OnEndTX.cmd
+if exist "PluginFiles\AfterTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 echo Stopping TX
 set premature=False
 if not exist Transmit echo ### WARNING: Transmission was stopped before message is finished. Raise timeout.
@@ -248,9 +274,17 @@ if not "%~3"=="" set RadioInput=%~3
 echo Starting TX
 echo. >Transmit
 timeout /t 1 /nobreak >nul
-if exist OnStartTX.cmd call OnStartTX.cmd
+if exist "PluginFiles\BeforeTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 call "playsound.exe" "%file%" %RadioInput%
-if exist OnEndTX.cmd call OnEndTX.cmd
+if exist "PluginFiles\AfterTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 echo Stopping TX
 del /f /q "%file%"
 set premature=False
@@ -271,11 +305,12 @@ echo.
 echo                                    [%callsign%]
 echo [93m1] Basic Transmit
 echo [96m2] Transmit Audio File
-echo [95m3] Transmit Custom Message
+echo [95m3] Transmit Custom TTS Message
 echo [31m4] DISTRESS MODE[0m
 echo S] Settings
+echo P] Plugins
 echo [90mX] Exit[0m
-choice /c x1234S
+choice /c x1234SP
 if %errorlevel%==1 exit /B
 set /a erl=%errorlevel%-1
 if %erl%==1 goto basic
@@ -283,6 +318,32 @@ if %erl%==2 goto audio
 if %erl%==3 goto custom
 if %erl%==4 goto distress
 if %erl%==5 goto settings
+if %erl%==6 goto plugins
+
+:plugins
+cls
+echo [96mPlugins[0m
+echo.
+echo [90mEnter number plugin to run, or x to exit.[0m
+echo.
+set plugnum=1
+for /f "tokens=1 delims=" %%A in ('dir "Plugins\*.cmd" /b') do (
+    echo !plugnum!] %%~nA
+    set plugin!plugnum!=%%~A
+    set /a plugnum+=1
+)
+echo.
+set /p plugin=">"
+if /i "%plugin%"=="x" goto mainmenu
+if exist "Plugins\!plugin%plugin%!" (
+    call "Plugins\!plugin%plugin%!"
+    goto plugins
+) ELSE (
+    echo Invalid.
+    pause
+    goto plugins
+)
+
 
 :distress
 color 0f
@@ -344,7 +405,11 @@ echo. >Transmit
 timeout /t 1 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
-if exist OnStartTX.cmd call OnStartTX.cmd
+if exist "PluginFiles\BeforeTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 1 /nobreak >nul
 call "playsound.exe" "AudioFiles\SOS.mp3" %RadioInput% >transmitaudio.log
@@ -352,7 +417,11 @@ call "playsound.exe" "%file%" %RadioInput% >transmitaudio.log
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 1 /nobreak >nul
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
-if exist OnEndTX.cmd call OnEndTX.cmd
+if exist "PluginFiles\AfterTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 echo Stopping TX
 set premature=False
 if not exist Transmit echo ### WARNING: Transmission is stopping before message is finished. Raise SO timeout.
@@ -467,13 +536,21 @@ echo. >Transmit
 timeout /t 1 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
-if exist OnStartTX.cmd call OnStartTX.cmd
+if exist "PluginFiles\BeforeTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 1 /nobreak >nul
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
-if exist OnEndTX.cmd call OnEndTX.cmd
+if exist "PluginFiles\AfterTX\*.cmd" (
+    for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
+        call %%a
+    )
+)
 echo Stopping TX
 set premature=False
 if not exist Transmit echo ### WARNING: Transmission is stopping before message is finished. Raise SO timeout.
@@ -656,7 +733,7 @@ echo [92mBasic Transmit mode[0m
 echo Transmission Timeout is %Timeout% seconds.
 echo.
 echo [96mNote: This device only controls PTT. While other modes output audio to the
-echo radio, this mode cannot forward audio. It is recommended that you use Voicemeeter 
+echo radio this mode cannot forward audio. It is recommended that you use Voicemeeter 
 echo or another mixer to send your microphone's output to the radio input.
 echo.
 echo Toggle PTT with the Space bar. Press X or Backspace to quit.
@@ -987,11 +1064,12 @@ set startingtime=!starts!
 set starts=On.!Starts!
 echo.
 echo Repeat?
-echo 1] Daily
-echo 2] Every other Day
-echo 3] Weekly
+echo 1] Hourly
+echo 2] Daily
+echo 3] Every other Day
+echo 4] Weekly
 echo X] None
-choice /c 123X
+choice /c 1234X
 set repeat=!errorlevel!
 goto confirmaudio
 
@@ -1004,15 +1082,18 @@ echo Length of transmission: %_hours% hours, %_minutes% minutes and %_seconds% s
 echo.
 echo Transmission Time Scheduled: %startingtime%
 if %repeat%==1 (
-        echo Repeats: Daily
+        echo Repeats: Hourly
 )
 if %repeat%==2 (
-        echo Repeats: Every other Day
+        echo Repeats: Daily
 )
 if %repeat%==3 (
-        echo Repeats: Weekly
+        echo Repeats: Every other Day
 )
 if %repeat%==4 (
+        echo Repeats: Weekly
+)
+if %repeat%==5 (
         echo Repeats: None
 )
 echo.
@@ -1071,19 +1152,23 @@ if "%premature%"=="True" (
     echo Make sure you accomodate for any start and stop tones in the timeout.
     echo.
 )
-if %repeat%==4 (
+if %repeat%==5 (
     pause
     goto audiosettings
 )
-if %repeat%==1 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(1^)') do (
+if %repeat%==1 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddHours(1^)') do (
     set startingtime=%%A
     set wait=%%A
 )
-if %repeat%==2 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(2^)') do (
+if %repeat%==2 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(1^)') do (
     set startingtime=%%A
     set wait=%%~A
 )
-if %repeat%==3 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(7^)') do (
+if %repeat%==3 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(2^)') do (
+    set startingtime=%%A
+    set wait=%%~A
+)
+if %repeat%==4 for /f "tokens=1 delims=" %%A in ('powershell (Get-Date '%wait%'^).AddDays(7^)') do (
     set startingtime=%%A
     set wait=%%~A
 )

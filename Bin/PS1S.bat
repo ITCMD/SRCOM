@@ -208,6 +208,8 @@ goto taskkill
 
 :taskkill
 Rem Get Title List
+tasklist /fi "imagename eq powershell.exe" | find "INFO: No tasks are running which match the specified criteria." >nul 2>nul
+if %errorlevel%==0 exit /b 0
 set num=0
 tasklist /fi "imagename eq powershell.exe" /fo list /v | find /I "Window Title:" >ps1s.%randvar%
 for /F "tokens=*" %%A in  (ps1s.%randvar%) do  (
