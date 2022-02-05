@@ -18,7 +18,8 @@
 
 - Made for use with a [Digirig](https://digirig.net/), a cheap device that allows interfacing with radios that do not have serial or digital connection.
 - Should work with any COM based PTT trigger and soundcard setup
-- Does not support busy-channel lockout at this time. **If anyone has a command-line usable tool that can listen to a specific input device to see if any audio is playing, I'd be able to impliment that**.
+- Does not support busy-channel lockout at this time. If anyone has a command-line usable tool that can listen to a specific input device to see if any audio is playing, I'd be able to impliment that.
+- **Update:** I am currently working on a feature that works with Voicemeeter which, if the radio is receiving audio, will wait until there is a break of x seconds.
 - Designed and tested with [Voicemeeter](https://voicemeeter.com/) setup in mind.
 
 ## Example [Voicemeeter](https://voicemeeter.com/) setup:
