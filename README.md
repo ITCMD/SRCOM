@@ -1,5 +1,5 @@
 # Simple-Radio-COM
- Simple-Radio-COM or SMCOM Controls a Radio connected via COM such as with a Digirig Mobile, allowing direct PTT control, transmitting and scheduling pre-recorded audio, and sending TTS in the program or via scripts!
+ Simple-Radio-COM or SRCOM Controls a Radio connected via COM such as with a Digirig Mobile, allowing direct PTT control, transmitting and scheduling pre-recorded audio, and sending TTS in the program or via scripts!
 
 
 ![Preview](https://i.imgur.com/gpzGNt8.png)
@@ -16,9 +16,9 @@
 
 # Plugins
 
-1. SMCOM supports third party plugins with a plugin menu. These can be added to Bin\Plugins.
-2. SMCOM plugins can place .cmd files in BeforeTX, OnStartTX, and AfterTX, and they will be run accordingly.
-3. SMCOM comes with a roger beep plugin, a callsign ID plugin, and a **busy channel lockout plugin.** (note: Busy channel lockout plugin requires voicemeeter macros).
+1. SRCOM supports third party plugins with a plugin menu. These can be added to Bin\Plugins.
+2. SRCOM plugins can place .cmd files in BeforeTX, OnStartTX, and AfterTX, and they will be run accordingly.
+3. SRCOM comes with a roger beep plugin, a callsign ID plugin, and a **busy channel lockout plugin.** (note: Busy channel lockout plugin requires voicemeeter macros).
 
 # Notes
 
