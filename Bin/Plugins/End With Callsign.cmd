@@ -1,10 +1,11 @@
 @echo off
-if not exist PluginFiles\AfterTX (
-    echo Could not find Bin folder or AfterTX folder.
+if not exist PluginFiles (
+    echo Could not find Bin folder.
     echo Make sure you run this file from Simple Radio COM
     pause
     exit /B
 )
+if not exist PluginFiles\AfterTX mkdir PluginFiles\AfterTX
 if not exist PluginFiles\Callsigns md "PluginFiles\Callsigns"
 :menu
 cls

@@ -29,7 +29,7 @@ if "%Console%"=="False" echo Self-Checking . . .
 for /f "tokens=1,2 delims=: skip=4" %%A in ('playsound AudioFiles\Calibrate.mp3 %RadioInput%') do (
         if "%%~B"=="%InputName%" goto PassAudioCheck
         set ErrorOutput=%%~B
-        if "%Console%"=="False" goto audioerror.
+        if "%Console%"=="False" goto audioerror
         exit /b
 )
 )
@@ -37,7 +37,7 @@ for /f "tokens=1,2 delims=: skip=4" %%A in ('playsound AudioFiles\Calibrate.mp3 
 echo Self-Check Pass
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface"
 echo Launching PTT PS1 Script
-start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %Timeout%
+start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %Timeout%
 goto mainmenu
 
 :firsttimesetup
@@ -59,7 +59,10 @@ set /p callsign=">"
 echo.
 echo Great. Hi there, %callsign%.
 echo [92mNext, what COM port is your digirig connected to?[0m
-echo [90mInclude COM. Example: COM5[0m
+echo [96mAvailable Com Ports:[0m
+wmic path win32_pnpentity get caption /format:table | find "COM"
+echo [90mInclude COM in entry. Example: COM5[0m
+echo.
 echo.
 set /p COMPort=">"
 echo.
@@ -179,9 +182,9 @@ set file=%session%.wav
 echo Preparing to transmit audio file: %file%
 
 :csschedloop
-for /f "tokens=1* delims=" %%A in ('powershell -File "CompareDateToNow.ps1" "%starts%"') do ( 
+for /f "tokens=1* delims=" %%A in ('powershell -executionpolicy bypass -File "CompareDateToNow.ps1" "%starts%"') do ( 
     if not "%%~A"=="True" (
-        timeout /t 1 /nobreak >nul
+        timeout /t 2 /nobreak >nul
         goto csschedloop
     )
 )
@@ -190,7 +193,7 @@ set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
         call "PluginFiles\BeforeTX\%%~a"
@@ -207,7 +210,7 @@ set premature=False
 if not exist Transmit echo ### WARNING: Transmission was stopped before message is finished. Raise timeout.
 if exist Transmit del /f /q Transmit
 del /f /q %file%
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 exit /b
 
 :csaud
@@ -234,7 +237,7 @@ set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
         call "PluginFiles\BeforeTX\%%~a"
@@ -282,7 +285,7 @@ set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 if exist "PluginFiles\BeforeTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\BeforeTX\*.cmd" /b') do (
         call "PluginFiles\BeforeTX\%%~a"
@@ -387,9 +390,9 @@ echo enter file:
 set session=DistressAudio%random%
 set /p file=">"
 set file=%file:"=%
-ffmpeg -i -y "%file%" "%cd%\%session%.mp3" >nul
+ffmpeg -y -i "%file%" "%cd%\%session%.mp3" >nul
 set file=%session%.mp3
-for /f "tokens=1,2,3 delims=:" %%A in ('powershell -File "audio file length.ps1" "%cd%\%file%"') do (
+for /f "tokens=1,2,3 delims=:" %%A in ('powershell -executionpolicy bypass -File "audio file length.ps1" "%cd%\%file%"') do (
         set _hours=%%A
         set _minutes=%%B
         set _seconds=%%C
@@ -401,7 +404,7 @@ echo Begin Distress Transmission? Transmission will take approximately %sostimeo
 choice
 if %errorlevel%==2 goto mainmenu
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %sostimeout%
+start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %sostimeout%
 echo SOS Transmission was started by %username% on %date% at %time%>>"%appdata%\SOSLog.log"
 :distreaudloop
 echo.
@@ -414,7 +417,7 @@ set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
 echo [102;31m[ON AIR][0m
@@ -424,7 +427,7 @@ if exist "PluginFiles\BeforeTX\*.cmd" (
     )
 )
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 call "playsound.exe" "AudioFiles\SOS.mp3" %RadioInput% >transmitaudio.log
 call "playsound.exe" "%file%" %RadioInput% >transmitaudio.log
 call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
@@ -535,7 +538,7 @@ set file=Audio%session%.wav
 set deletefile=%file%
 echo BEGINNING SOS TRANSMISSION
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %distresstimeout%
+start /MIN Powershell -executionpolicy bypass -File "PTT Trigger.ps1" %COMPort% %distresstimeout%
 echo SOS Transmission was started by %username% on %date% at %time%>>"%appdata%\SOSLog.log"
 echo.
 :BasicSOSLoop
@@ -549,7 +552,7 @@ set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 color 4f
 title Simple Radio COM by W1BTR [ON AIR]
 if exist "PluginFiles\BeforeTX\*.cmd" (
@@ -583,7 +586,7 @@ goto BasicSOSLoop
 
 :postdistress
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN powershell -file "PTT Trigger.ps1" %COMPort% %Timeout%
+start /MIN Powershell -executionpolicy bypass -File "PTT Trigger.ps1" %COMPort% %Timeout%
 goto mainmenu
 
 :custom
@@ -634,7 +637,7 @@ echo [92mFile generated.[0m
 del /f /q tts%session%.vbs
 timeout /t 1 /nobreak>nul
 set deletefile=Audio%session%.wav
-set file="Audio%session%.wav"
+set file=Audio%session%.wav
 goto :FromTTS
 
 :settings
@@ -767,7 +770,7 @@ if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo.>Transmit
 color e0
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 color 60
@@ -834,8 +837,9 @@ echo.
 echo [96mEnter File that will be used (or X to exit):[0m
 
 set /p file=">"
+set file=%file:"=%
 if /i "%file%"=="X" goto mainmenu
-if not exist "%file:"=%" (
+if not exist "%file%" (
         echo File not found.
         pause
         goto mainmenu
@@ -845,11 +849,11 @@ if not "%extension%"==".wav" (
     if not "%extension%"==".mp3" goto convertfile
 )
 :returnfromconvert
-copy "%file:"=%" "%cd%\" /Y >nul 2>nul
+copy "%file%" "%cd%\" /Y >nul 2>nul
 set deletefile=%file%
 :FromTTS
-for /f "tokens=1 delims=" %%A in ('echo "%file:"=%"') do (set file=%%~nxA)
-for /f "tokens=1,2,3 delims=:" %%A in ('powershell -File "audio file length.ps1" "%cd%\%file:"=%"') do (
+for /f "tokens=1 delims=" %%A in ('echo "%file%"') do (set file=%%~nxA)
+for /f "tokens=1,2,3 delims=:" %%A in ('Powershell -executionpolicy bypass -File "audio file length.ps1" "%cd%\%file%"') do (
         set _hours=%%A
         set _minutes=%%B
         set _seconds=%%C
@@ -896,7 +900,7 @@ if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
 echo [102;31m[ON AIR][0m
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
@@ -929,7 +933,7 @@ echo Convert with ffmpeg?
 choice
 if %errorlevel%==2 goto mainmenu
 color 07
-ffmpeg -i -y "%file:"=%" "%file:"=%.wav" >nul
+ffmpeg -y -i "%file:"=%" "%file:"=%.wav" >nul
 set file=%file:"=%.wav
 color 0f
 goto returnfromconvert
@@ -1020,7 +1024,7 @@ if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
 echo [102;31m[ON AIR][0m
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
@@ -1140,7 +1144,7 @@ echo File has length of %_total% seconds.
 echo.
 echo Waiting for:   %wait%
 echo Current Time:  %wait%
-for /f "tokens=1* delims=" %%A in ('powershell -File "CompareDateToNow.ps1" "%startingtime%"') do ( 
+for /f "tokens=1* delims=" %%A in ('Powershell -executionpolicy bypass -File "CompareDateToNow.ps1" "%startingtime%"') do ( 
     if not "%%~A"=="True" (
         timeout /t 1 /nobreak >nul
         goto testaudioloop
@@ -1160,7 +1164,7 @@ if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto :mainmenu
 echo. >Transmit
 echo [102;31m[ON AIR][0m
-timeout /t 1 /nobreak >nul
+timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
@@ -1208,7 +1212,7 @@ echo.
 echo.
 echo Now waiting for %startingtime% to transmit again.
 :extraaudioloop
-for /f "tokens=* delims=" %%A in ('powershell -File "CompareDateToNow.ps1" "%startingtime%"') do ( 
+for /f "tokens=* delims=" %%A in ('Powershell -executionpolicy bypass -File "CompareDateToNow.ps1" "%startingtime%"') do ( 
     if not "%%~A"=="True" (
         timeout /t 1 /nobreak >nul
         goto :extraaudioloop
@@ -1227,7 +1231,7 @@ call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
 :error
 echo Please report this bug to https://github.com/ITCMD/Simple-Radio-COM/issues
 if exist Transmit del /f /q Transmit
-timeout /t 3 >nul
+timeout /t 2 >nul
 call ps1s /tk "Simple Radio COM Ps1 Serial Interface" >nul
 pause
 exit /b

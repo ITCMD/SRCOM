@@ -149,7 +149,9 @@ echo.
 set /p sec=">"
 echo.
 echo Enabling plugin...
+if not exist "PluginFiles\BeforeTX" mkdir "PluginFiles\BeforeTX"
 echo @set wait=%sec% >PluginFiles\Lockout_Settings.cmd
+echo copy "%~0" "PluginFiles\BeforeTX\0a_busylockout.cmd"
 copy "%~0" "PluginFiles\BeforeTX\0a_busylockout.cmd" >nul
 echo.
 echo Done.
