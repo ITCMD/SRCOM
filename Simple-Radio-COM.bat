@@ -713,8 +713,12 @@ echo [90mNote: Plugins do not apply to recordings.
 echo [92m[R] - Record [L] - Listen [D] - Delete [X] - Exit[0m
 echo ============================================================================
 choice /c 1234567890rldx /N >nul
-if %errorlevel% LSS 11 (
+if %errorlevel% LSS 10 (
     set play=%errorlevel%
+    goto playrec
+)
+if %errorlevel%==10 (
+    set play=0
     goto playrec
 )
 if %errorlevel%==11 goto recnew
