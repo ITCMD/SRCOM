@@ -1,7 +1,7 @@
 # Simple-Radio-COM
 Simple-Radio-COM or SRCOM Controls a Radio connected via COM such as with a Digirig Mobile, allowing direct PTT control, transmitting and scheduling pre-recorded audio, saving messages and playing them over the air, recording both sides of conversation, live text-to-speech, and more!
 
-Note that as of right now it does not control the frequency / change modes, it just interfaces over audio.
+Note that as of right now it does not control the frequency / change modes, it just interfaces over audio. Maybe at some point I can use hamlib to do that, but since I only know batch code, it's hard to interface with any APIs.
 
 ### [Version 7 Beta Out Now!](https://github.com/ITCMD/Simple-Radio-COM/releases)
 Powered by new media engine - https://github.com/stsaz/fmedia
