@@ -81,6 +81,11 @@ To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-CO
 
 ![setup screenshot](https://i.imgur.com/ybpeQt8.png)
 
+# To-Do
+
+- Easy Record and Playback of radio output to provide audio tests to other operators
+- Bug fixes. Haven't found them yet, but I'm sure they're there.
+
 # Links
 ## https://w1btr.com
 ## https://programs.lucas-elliott.com
