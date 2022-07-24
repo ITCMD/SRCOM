@@ -91,7 +91,7 @@ To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-CO
 ## https://programs.lucas-elliott.com
 ## https://github.com/stsaz/fmedia
 
-        #                              
+```        #                              
       #######      ##############(        Powered by fmedia
      ########    ###################      https://github.com/stsaz/fmedia
     #######/    ,#######     ########   
@@ -106,4 +106,4 @@ To Install, head over to the [releases](https://github.com/ITCMD/Simple-Radio-CO
                 #######                   TheNextGuy100 - TTS Ideas
                 #######                   https://www.twitch.tv/thenextguy100
                 #######                    
-                #######                   W3AVP, KB1OIQ, KB1GMX
+                #######                   W3AVP, KB1OIQ, KB1GMX```
