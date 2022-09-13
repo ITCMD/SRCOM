@@ -1,0 +1,20 @@
+[8]
+
+VERSION 8 RELEASE NOTES
+
+- NEW LOGGING SOFTWARE
+  - SRCOM now comes with SRLog, a simple and very light logging software
+    for Windows systems. It supports contests such as field day, as well
+    as Satellite work. SRCOM also automatically checks for duplicate
+    contacts and pulls information from hamdb. To learn more or download
+    SRLog indipendantly, visit https://github.com/ITCMD/SRLog
+    
+- Bug Fixes
+  - Fixed some stability and timing bugs in the Quick Recorder
+  - Fixed a typo in distress mode
+  - Added Custom text for infinite looping when playing files
+  - Added update software (this)
+  - I'm now realizing nobody will ever read this because older versions
+    don't have an update software
+  - I'm gonna go ahead and add some special code so that it DOES show it
+    to you. Now you'll have to read this muhahahahahahah
