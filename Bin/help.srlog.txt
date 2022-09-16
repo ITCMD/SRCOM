@@ -1,0 +1,49 @@
+  ____  ____  _     By W1BTR             
+ / ___||  _ \| |    ___   __ _ 
+ \___ \| |_) | |   / _ \ / _` |
+  ___) |  _ <| |__| (_) | (_| |
+ |____/|_| \_\_____\___/ \__, |
+    Simple Radio Logger  |___/ 
+
+Welcome to SRLog, a Windows logging software that comes as a part of the SRCOM
+software suite. This software is designed with simplicity, portability, and
+functionality in mind. SRLog is open source and allows the following logging:
+
+- 160m-23cm band logging support
+- Contest support, including Field Day
+- Satellite Contact Support
+- Automatic hamdb pulling for names and QTH (toggleable)
+- Automatic UTC Time
+- Auto-Filled RST reports
+- Search current and previous log files
+- Check for duplicate contacts in the current and previous logs
+- Export to ADIF for easy integration with your favorite logging service
+- Automatically informs the user what their voice range is for their license
+- Can be run over SSH
+- One Keypress QRZ page opening
+
+SRLog does not use the mouse at all, and is designed to be rapidly navigated with
+the keyboard. It has an easy no-query mode for offline / quicker use.
+
+Here are some tips and tricks for using the software:
+
+- For callsigns starting with a W, K, or F, you can press that key on the keyboard 
+  instead of 1 or C to save one keypress.
+
+- When entering into any field, pressing enter without any content will not change
+  the variable. In general, enter NONE to blank out a field.
+
+- Avoid using special characters in notes and names as they can mess with the program
+
+- Notes, Contest data, and Satellite mode is indicated under "SPEC" in the log list.
+  S indicates Satellite work, C indicates contest data (State, Class, or Serial),
+  and an N indicates there is a note.
+
+- Exporting to ADIF can take a bit for long files.
+
+- Make sure your system clock is accurate for UTC time to fill in properly
+
+- Letter-based keybinds will not work as capitalized letters. Leave your caps lock off.
+
+- Report any bugs or issues to https://github.com/ITCMD/SRLog or send an email
+  to w1btr_dev@lucas-elliott.com

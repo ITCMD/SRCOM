@@ -1,5 +1,5 @@
 @echo off
-set vrs=7
+set vrs=8
 rem todo
 rem Add QuickRecorder
 rem Fix Stream in simple mode
@@ -12,7 +12,9 @@ if "%Console%"=="False" cls
 if "%Console%"=="False" title Simple Radio COM by W1BTR
 if "%Console%"=="False" echo Loading Settings . . .
 rem NOTE: Do not change these settings - change them in the settings menu after setup, or in Bin\settings.cmd.
-set COMPort=COM5
+set COMPort=NONE
+set Model=
+set CheckForUpdates=Y
 set fromsimple=false
 Set COMCheck=Nul
 set Timeout=120
@@ -39,6 +41,21 @@ echo.
 echo [0mLoading . . .
 if exist Transmit del /f /q Transmit
 if exist settings.cmd call settings.cmd
+REM Check for updates
+if "%~1"=="-Updated" goto ranupdate
+if "%CheckForUpdates%"=="N" goto :skipupdates
+ping github.com -n 1 -w 2 >nul
+if not %errorlevel%==0 goto skipupdates
+curl https://raw.githubusercontent.com/ITCMD/SRCOM/main/LatestVersion -s -o LatestVersionDL
+find "SRCOM VERSION" "LatestVersionDL" >nul 2>nul
+if not "%errorlevel%"=="0" (
+    echo Failed to check for updates. LatestVersion file had unexpected content.
+    goto skipupdates
+)
+find "[%vrs%]" "LatestVersionDL" >nul 2>nul
+if not "%errorlevel%"=="0" goto updateavailable
+del /f /q LatestVersionDl
+:skipupdates
 set livetts.rate=%voice.rate%
 timeout /t 2 /nobreak >nul
 if "%callsign%"=="XXXXX" goto firsttimesetup
@@ -49,6 +66,7 @@ if not %errorlevel%==0 goto audioerror
 :PassAudioCheck
 rem Check COM device
 if "%COMPort%"=="NONE" goto passselfcheck
+if "%COMPort%"=="RIGCTL" goto passselfcheck
 for /f "delims=" %%A in ('wmic path win32_pnpentity get caption /format:table ^| find /i "(%COMPort%)"') do (set "COMComp=%%~A")
 if not "%COMComp%"=="%COMCheck%" (
     goto comerror
@@ -57,7 +75,14 @@ if not "%COMComp%"=="%COMCheck%" (
 echo Self-Check Pass.
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface"
 echo Launching PTT PS1 Script
-if /i not "%ComPort%"=="NONE" start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %Timeout%
+if /i not "%ComPort%"=="NONE" (
+    if /i not "%COMPort%"=="RIGCTL" (
+        start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %Timeout%
+    ) ELSE (
+        start "" "RigControl.bat"
+        call focuson.bat "Simple Radio COM by W1BTR" >nul
+    )
+)
 goto mainmenu
 
 :comerror
@@ -73,7 +98,6 @@ pause >nul
 goto ComDevice
 
 :COMDevice
-cls
 echo [92mDoes your radio interface use COM to trigger PTT?[0m
 echo.
 choice
@@ -120,14 +144,53 @@ echo.
 set /p callsign=">"
 echo.
 echo Great. Hi there, %callsign%.
-:comportback
-echo.
-echo [92mNow we need to know if your device uses COM to trigger PTT (Digirig), or if it uses VOX (Signalink).
-echo [91mNote: At this time, SRCOM only suports the Digirig for COM control (or other devices that use the RTS pin).[0m.
-echo.
-echo Does your radio interface use COM to trigger PTT?[0m
+:hamlibback
+echo. 
+echo [92mNow, will you be utilizing a CAT connection to the control the radio?
+echo This is separate from how the radio will trigger PTT.
+echo [90mConnections are made using hamlib. See support devices here:
+echo https://github.com/Hamlib/Hamlib/wiki/Supported-Radios[0m
 echo.
 choice
+if %errorlevel%==2 goto donehamlib
+echo.
+echo [92mGreat, let's figure out what device you're using.
+echo.
+echo [96mEnter the ID number of your radio
+echo [90mTo see a list of radios and their IDs, visit https://github.com/Hamlib/Hamlib/wiki/Supported-Radios[0m
+echo.
+set /p Model=">"
+set count=0
+for /f "skip=1 tokens=1 delims=" %%A in ('hamlib\bin\rigctl.exe -l ^| find /i "%Model%  "') do (set /a count+=1)
+if %count%==0 (
+    echo Model was not found. It may be named something else in hamlib's database.
+    echo Visit https://github.com/Hamlib/Hamlib/wiki/Supported-Radios to see a list of supported rigs.
+    pause
+    goto hamlibback
+)
+if %count%==1 goto hamlibselected
+echo Error: Numerous matches found.
+echo Please report this error at github.com/ITCMD/Simple-Radio-COM
+pause
+goto hamlibback
+
+:hamlibselected
+echo.
+echo. | set/p="[96mSelected Device: "
+rigctl -l | find /i "%Model%  "
+echo Continue?
+choice
+if %errorlevel%==2 goto hamlibback
+:donehamlib
+:comportback
+echo.
+echo [92mNow we need to know how you will trigger PTT (Push-to-talk) on your radio.[96m
+echo.
+echo 1] RTS Pin (Digirig or Rigblaster Pro)
+echo 2] VOX (Signalink or VOX enabled rig)
+if not "%model%"=="" echo 3] Use Hamlib CAT control (Recommended)
+echo.
+choice /c 123
 if %errorlevel%==2 (
     set COMPort=NONE
     set ComCheck=NONE
@@ -135,7 +198,14 @@ if %errorlevel%==2 (
     echo Alright, no COM port, VOX it is.
     goto firsttimeaudio
 )
-echo [92mOkay, what COM port is your interface connected to?
+if %errorlevel%==3 (
+    if "%model%"=="" goto comportback
+    set COMPort=RIGCTL
+    echo.
+    echo Epic. We'll use hamlib to trigger PTT.
+    goto firsttimeaudio
+)
+echo [92mOkay, what COM port is your Digirig or other interface connected to?
 echo [90mPort name is in parenthases.
 echo.
 echo [96mAvailable Com Ports:[0m
@@ -196,6 +266,7 @@ echo Alright %callsign%, we'll use%AudioCheck%
 echo as your radio's mic input.
 :NewRadioOutput
 echo.
+echo [90m======================================================================
 echo [92mDo you have a device you wish to record your Radio's output from?[0m
 echo =======================================================================
 echo [90mThis is not required, and will not automatically play your radio's audio
@@ -260,6 +331,7 @@ echo @set "voice.rate=%voice.rate%">>settings.cmd
 echo @set "voice.volume=%voice.volume%">>settings.cmd
 echo @set "callsign=%callsign%">>settings.cmd
 echo @set "COMCheck=%COMCheck%">>settings.cmd
+echo @set "Model=%Model%">>settings.cmd
 echo.
 pause
 goto mainmenu
@@ -356,7 +428,6 @@ if exist "PluginFiles\BeforeTX\*.cmd" (
     )
 )
 call "fmedia.exe" "%file:"=%" --dev=%RadioInput% 2>nul
-rem call "playsound.exe" "%file%" %RadioInput%
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
         call "PluginFiles\AfterTX\%%~a"
@@ -401,7 +472,6 @@ if exist "PluginFiles\BeforeTX\*.cmd" (
     )
 )
 call fmedia "%file%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%file%" %RadioInput%
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
         call "PluginFiles\AfterTX\%%~a"
@@ -479,12 +549,14 @@ echo [95m3] Transmit Custom TTS Message
 echo [93m4] Recordings and Playback
 echo [94m5] Live Text-To-Speech Mode
 echo [31m6] DISTRESS MODE
+echo [97mL] Open SRLogger[0m
+echo [36mO] Other Station Playback[0m
 echo [33mR] Open Quick Recorder[0m
 echo S] Settings
 echo [90mP] Plugins[0m
 echo A] About
 echo [90mX] Exit[0m
-choice /c x123456SPRA
+choice /c x123456SPRALO
 if %errorlevel%==1 exit /B
 set /a erl=%errorlevel%-1
 if %erl%==1 goto basic
@@ -500,7 +572,71 @@ if %erl%==9 (
     goto mainmenu
 )
 if %erl%==10 goto about
+if %erl%==11 (
+    start "" "logger.bat"
+    goto mainmenu
+)
+if %erl%==12 goto recplaybacktest
 exit /b %erl%
+
+
+:recplaybacktest
+cls
+color 0f
+type logo.ascii
+echo.
+echo [36mOther Station Playback Test[0m
+echo.
+echo This tool allows you to provide audio checks for other stations.
+echo It will record what the radio receives untill you tell it to stop,
+echo at which point it will play the audio back out your radio, allowing
+echo the other station to hear themselves.
+echo.
+echo Note that the usefullness of this program depends on the quality of
+echo your interface's audio output to the radio.
+echo.
+echo 1] Begin
+echo X] Cancel
+choice /c x1
+if %errorlevel%==1 goto mainmenu
+echo.
+echo [92mPress any key to begin recording of radio's RX . . .[0m
+pause >nul
+echo [96mPress [S] to stop and save the recording.[0m
+if exist templayback.mp3 del /f /q templayback.mp3
+call fmedia.exe --record --dev-capture=%RadioOutput% --out tempplayback.mp3
+echo [92mRecording saved.[0m
+:returnafterrecord
+echo 1] Play Back Recording over Radio
+echo 2] Listen to Recording
+echo X] Cancel
+choice /c 12X
+if %errorlevel%==3 goto recplaybacktest
+if %errorlevel%==2 (
+    call fmedia.exe tempplayback.mp3 --notui
+    goto returnafterrecord
+)
+echo [96mPlaying back recording over radio . . .[0m
+if /i not "%ComPort%"=="NONE" echo. >Transmit
+if /i not "%ComPort%"=="NONE" timeout /t 2 /nobreak >nul
+echo [102;31m[ON AIR][0m
+title Simple Radio COM by W1BTR [ON AIR]
+call fmedia "tempplayback.mp3" --dev=%RadioInput% --volume=%Volume% --notui
+echo Ending Transmission
+set premature=False
+if /i not "%COMPort%"=="NONE" (
+    if not exist Transmit set premature=True
+)
+if exist Transmit del /f /q Transmit
+timeout /t 1 /nobreak >nul
+title Simple Radio COM by W1BTR
+echo.
+echo 1] Return to Selection Menu
+echo X] Close
+choice /c 1X
+if %errorlevel%==1 echo.&echo.&goto returnafterrecord
+if exist tempplayback.mp3 del /f /q tempplayback.mp3
+goto mainmenu
 
 :about
 cls
@@ -523,6 +659,21 @@ echo.[0m
 pause
 goto mainmenu
 
+:updateavailable
+cls
+color 0f
+echo.
+echo [96mThere is an update available:[0m
+echo.
+type LatestVersionDL
+echo.
+echo [96mUpdate to this version? (Press Y or N)
+choice
+if %errorlevel%==2 goto skipupdates
+echo Preparing update . . .
+curl https://raw.githubusercontent.com/ITCMD/SRCOM/main/Bin/DontRun.Updator.bat -s -o Updator.bat
+updator.bat
+exit
 
 :UpdateUTC
 REM get UTC times:
@@ -748,7 +899,6 @@ if /i not "%ComPort%"=="NONE" timeout /t 2 /nobreak >nul
 echo [102;31m[ON AIR][0m
 title Simple Radio COM by W1BTR [ON AIR]
 call fmedia "PlaybackRecordings\%play%.wav" --dev=%RadioInput% --volume=%Volume%
-rem call "playsound.exe" "PlaybackRecordings\%play%.wav" %RadioInput%
 echo Ending Transmission
 set premature=False
 if /i not "%COMPort%"=="NONE" (
@@ -969,17 +1119,12 @@ if exist "PluginFiles\BeforeTX\*.cmd" (
     )
 )
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 2 /nobreak >nul
 call fmedia "AudioFiles\SOS.mp3" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "AudioFiles\SOS.mp3" %RadioInput% >transmitaudio.log
 call fmedia "%file:"=%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%file%" %RadioInput% >transmitaudio.log
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 1 /nobreak >nul
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
         call "PluginFiles\AfterTX\%%~a"
@@ -1096,7 +1241,7 @@ echo Repeating Distress Mesage.
 echo.
 echo TO FORCE STOP TRANSMISSION PRESS CTRL+C and CLOSE POWERSHELL WINDOW
 echo.
-echo DISTRESS MODE DISTRESS MODE DISTRESS MODe.
+echo DISTRESS MODE DISTRESS MODE DISTRESS MODE.
 set cancel=False
 if exist BeforeTX.cmd call BeforeTX.cmd
 if %cancel%==True goto mainmenu
@@ -1110,14 +1255,10 @@ if exist "PluginFiles\BeforeTX\*.cmd" (
     )
 )
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 call fmedia "%file:"=%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%file%" %RadioInput% >transmitaudio.log
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 timeout /t 1 /nobreak >nul
 call fmedia "%morse%" --dev=%RadioInput% --volume=%Volume% --notui 2>nul
-rem call "playsound.exe" "%morse%" %RadioInput% >transmitaudio.log
 if exist "PluginFiles\AfterTX\*.cmd" (
     for /f "tokens=1 delims=" %%a in ('dir "PluginFiles\AfterTX\*.cmd" /b') do (
         call "PluginFiles\AfterTX\%%~a"
@@ -1216,6 +1357,8 @@ echo @set "voice.volume=%voice.volume%">>settings.cmd
 echo @set "callsign=%callsign%">>settings.cmd
 echo @set "COMCheck=%COMCheck%">>settings.cmd
 echo @set "Volume=%Volume%">>settings.cmd
+echo @set "Model=%Model%">>settings.cmd
+
 echo 1] COM Port: %COMPort%
 echo 2] Timeout: %Timeout%
 if "%AudioCheck:~0,64%"=="%AudioCheck%" echo 3] Radio Input: %AudioCheck%
@@ -1595,7 +1738,6 @@ if /i not "%COMPort%"=="NONE" timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "fmedia.exe" "%file:"=%" --dev=%RadioInput% 2>nul
-rem call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
 if exist OnEndTX.cmd call OnEndTX.cmd
 echo Ending Transmission
 set premature=False
@@ -1691,7 +1833,11 @@ echo.
 echo.
 echo [92mPreparing to Play File: %file% [0m
 echo.
-echo This will be loop %loopcount% of %loopamount%
+if "%loopamount%"=="0" (
+    echo Looping Infinitely...
+) ELSE (
+    echo This will be loop %loopcount% of %loopamount%
+)
 echo.
 echo Waiting %timer% seconds... Press Q to cancel.
 choice /c qp /t %timer% /d p >nul
@@ -1731,7 +1877,6 @@ if /i not "%COMPort%"=="NONE" timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "fmedia.exe" "%file:"=%" --dev=%RadioInput% 2>nul
-rem call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
 if exist OnEndTX.cmd call OnEndTX.cmd
 echo Ending Transmission
 set premature=False
@@ -1877,7 +2022,6 @@ if /i not "%COMPort%"=="NONE" timeout /t 2 /nobreak >nul
 title Simple Radio COM by W1BTR [ON AIR]
 if exist OnStartTX.cmd call OnStartTX.cmd
 call "fmedia.exe" "%file:"=%" --dev=%RadioInput% 2>nul
-rem call "playsound.exe" "%file:"=%" %RadioInput% >transmitaudio.log
 if exist OnEndTX.cmd call OnEndTX.cmd
 echo Ending Transmission
 set premature=False
