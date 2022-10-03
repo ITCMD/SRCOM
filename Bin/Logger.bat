@@ -1330,13 +1330,13 @@ set TMName=%TMName:$=%
 set TLName=%TLName:$=%
 set TStreet=%TStreet:$=%
 set TCity=%TCity:$=%
-set TST=%TState:$=%
-set TST=%TState: =%
+set TST=%TST:$=%
+set TST=%TST: =%
 set TZIP=%TZIP:$=%
 set TCountry=%TCountry:$=%
 set "top=%TFName: =%%TMName%%TLName%"
 set "top=%top:~,-1%"
-set "QTH=%TStreet%%Tcity%%TST%tCountry%"
+set "QTH=%TStreet%%Tcity%%TST% %tCountry%"
 set "tsquare=%tsquare: =%"
 set tcall=%tcallresult: =%
 exit /b
