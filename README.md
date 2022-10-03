@@ -8,7 +8,7 @@ Supports Windows 8-11.
 ### [Version 7 Beta Out Now!](https://github.com/ITCMD/Simple-Radio-COM/releases)
 Powered by new media engine - https://github.com/stsaz/fmedia
 
-![Preview](https://user-images.githubusercontent.com/32961763/180625139-2b8303ab-2a9e-4c75-9edf-10d42ad75cc3.png)
+![Preview](https://i.imgur.com/rdqaJUa.png)
 
 # Features
 
