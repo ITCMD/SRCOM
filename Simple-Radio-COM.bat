@@ -1,5 +1,5 @@
 @echo off
-set vrs=8
+set vrs=8.2
 rem todo
 rem Add QuickRecorder
 rem Fix Stream in simple mode
