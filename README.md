@@ -5,7 +5,7 @@ Note that as of right now it does not control the frequency / change modes, it j
 
 Supports Windows 8-11.
 
-### [Version 7 Beta Out Now!](https://github.com/ITCMD/Simple-Radio-COM/releases)
+### [Version 9 Beta Out Now!](https://github.com/ITCMD/Simple-Radio-COM/releases)
 Powered by new media engine - https://github.com/stsaz/fmedia
 
 ![Preview](https://i.imgur.com/rdqaJUa.png)
