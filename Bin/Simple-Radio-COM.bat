@@ -57,7 +57,7 @@ if not "%errorlevel%"=="0" goto updateavailable
 del /f /q LatestVersionDl
 :skipupdates
 set livetts.rate=%voice.rate%
-timeout /t 2 /nobreak >nul
+timeout /t 1 /nobreak >nul
 if "%callsign%"=="XXXXX" goto firsttimesetup
 rem Check audio device
 if "%Console%"=="False" echo Self-Checking . . .
@@ -67,20 +67,21 @@ if not %errorlevel%==0 goto audioerror
 rem Check COM device
 if "%COMPort%"=="NONE" goto passselfcheck
 if "%COMPort%"=="RIGCTL" goto passselfcheck
-for /f "delims=" %%A in ('wmic path win32_pnpentity get caption /format:table ^| find /i "(%COMPort%)"') do (set "COMComp=%%~A")
+for /f "delims=" %%A in ('powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1" | find /i "(%COMPort%)"') do (set "COMComp=%%~A")
 if not "%COMComp%"=="%COMCheck%" (
     goto comerror
 )
 :passselfcheck
-echo Self-Check Pass.
+timeout /t 1 /nobreak >nul
+echo Self-Check Passed . . .
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface"
 echo Launching PTT PS1 Script
 if /i not "%ComPort%"=="NONE" (
     if /i not "%COMPort%"=="RIGCTL" (
-        start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %Timeout%
+        start /MIN powershell -executionpolicy bypass -file "PTT Trigger %DTRRTS%.ps1" %COMPort% %Timeout%
     ) ELSE (
-        start "" "RigControl.bat"
-        call focuson.bat "Simple Radio COM by W1BTR" >nul
+        rem start "" "RigControl.bat"
+        rem call focuson.bat "Simple Radio COM by W1BTR" >nul
     )
 )
 goto mainmenu
@@ -110,19 +111,19 @@ echo [92mWhat COM port is your interface connected to?
 echo [90mPort name is in parenthases.
 echo.
 echo [96mAvailable Com Ports:[0m
-wmic path win32_pnpentity get caption /format:table | find "COM"
+powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1"
 echo [90mInclude COM in entry. Example: COM5[0m
 echo.
 echo.
 set /p COMPort=">"
 echo.
-wmic path win32_pnpentity get caption /format:table | find /i "(%COMPort%)" >nul 2>nul
+powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1" -s | find /i "(%COMPort%)" >nul 2>nul
 if not "%errorlevel%"=="0" (
     echo COM Port "%COMPort%" was not found.
     pause
     goto COMDevice
 )
-for /f "delims=" %%A in ('wmic path win32_pnpentity get caption /format:table ^| find /i "(%COMPort%)"') do (set COMCheck=%%~A)
+for /f "delims=" %%A in ('powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1" ^| find /i "(%COMPort%)"') do (set COMCheck=%%~A)
 echo Fantastic. We'll use COM port %COMPort% to trigger PTT.
 goto settings
 
@@ -145,7 +146,7 @@ set /p callsign=">"
 echo.
 echo Great. Hi there, %callsign%.
 :hamlibback
-echo. 
+echo.
 echo [92mNow, will you be utilizing a CAT connection to the control the radio?
 echo This is separate from how the radio will trigger PTT.
 echo [90mConnections are made using hamlib. See support devices here:
@@ -161,9 +162,9 @@ echo [90mTo see a list of radios and their IDs, visit https://github.com/Hamlib
 echo.
 set /p Model=">"
 set count=0
-for /f "skip=1 tokens=1 delims=" %%A in ('hamlib\bin\rigctl.exe -l ^| find /i "%Model%  "') do (set /a count+=1)
+for /f "tokens=1 delims=" %%A in ('hamlib\bin\rigctl.exe -l ^| find /i "%Model%  "') do (set /a count+=1)
 if %count%==0 (
-    echo Model was not found. It may be named something else in hamlib's database.
+    echo Model %Model% was not found. It may be named something else in hamlib's database.
     echo Visit https://github.com/Hamlib/Hamlib/wiki/Supported-Radios to see a list of supported rigs.
     pause
     goto hamlibback
@@ -177,7 +178,7 @@ goto hamlibback
 :hamlibselected
 echo.
 echo. | set/p="[96mSelected Device: "
-rigctl -l | find /i "%Model%  "
+hamlib\bin\rigctl.exe -l | find /i "%Model%  "
 echo Continue?
 choice
 if %errorlevel%==2 goto hamlibback
@@ -187,40 +188,43 @@ echo.
 echo [92mNow we need to know how you will trigger PTT (Push-to-talk) on your radio.[96m
 echo.
 echo 1] RTS Pin (Digirig or Rigblaster Pro)
-echo 2] VOX (Signalink or VOX enabled rig)
-if not "%model%"=="" echo 3] Use Hamlib CAT control (Recommended)
+echo 2] DTR Pin (AIOC / AIOB)
+echo 3] VOX (Signalink or VOX enabled rig)
+if not "%model%"=="" echo 4] Use Hamlib CAT control (Recommended)
 echo.
-choice /c 123
-if %errorlevel%==2 (
+choice /c 1234
+if %errorlevel%==3 (
     set COMPort=NONE
     set ComCheck=NONE
     echo.
     echo Alright, no COM port, VOX it is.
     goto firsttimeaudio
 )
-if %errorlevel%==3 (
+if %errorlevel%==4 (
     if "%model%"=="" goto comportback
     set COMPort=RIGCTL
     echo.
     echo Epic. We'll use hamlib to trigger PTT.
     goto firsttimeaudio
 )
-echo [92mOkay, what COM port is your Digirig or other interface connected to?
+if %errorlevel%==1 set DTRRTS=RTS
+if %errorlevel%==2 set DTRRTS=DTR
+echo [92mOkay, what COM port is your interface connected to?
 echo [90mPort name is in parenthases.
 echo.
 echo [96mAvailable Com Ports:[0m
-wmic path win32_pnpentity get caption /format:table | find "COM"
+powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1"
 echo [90mInclude COM in entry. Example: COM5[0m
 echo.
 set /p COMPort=">"
 echo.
-wmic path win32_pnpentity get caption /format:table | find /i "(%COMPort%)" >nul 2>nul
+powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1" -s | find /i "(%COMPort%)" >nul 2>nul
 if not "%errorlevel%"=="0" (
     echo COM Port "%COMPort%" was not found.
     pause
     goto comportback
 )
-for /f "delims=" %%A in ('wmic path win32_pnpentity get caption /format:table ^| find /i "(%COMPort%)"') do (set COMCheck=%%~A)
+for /f "delims=" %%A in ('powershell -executionpolicy bypass -file "Bin\List Com Ports.ps1" ^| find /i "(%COMPort%)"') do (set COMCheck=%%~A)
 echo Fantastic. We'll use COM port %COMPort% to trigger PTT.
 :firsttimeaudio
 echo.
@@ -315,11 +319,12 @@ set RadioOutput=%NewRadioOutput%
 
 :doneinitialsetup
 echo.
-echo [92mThat's it for the initial setup.[0m
+echo [0mThat's it for the initial setup.
 echo.
 echo But, there are more settings to explore in the settings menu, such
 echo as the TTS voice, voice speed, and voice volume, or timeout settings.
 echo @set "COMPort=%COMPort%">settings.cmd
+echo @set "DTRRTS=%DTRRTS%">>settings.cmd
 echo @set "Timeout=%Timeout%">>settings.cmd
 echo @set "RadioInput=%RadioInput%">>settings.cmd
 echo @set "AudioCheck=%AudioCheck%">>settings.cmd
@@ -677,17 +682,14 @@ exit
 
 :UpdateUTC
 REM get UTC times:
-for /f %%a in ('wmic Path Win32_UTCTime get Year^,Month^,Day^,Hour^,Minute^,Second /Format:List ^| findstr "="') do (set %%a)
-Set Second=0%Second%
-Set Second=%Second:~-2%
-Set Minute=0%Minute%
-Set Minute=%Minute:~-2%
-Set Hour=0%Hour%
-Set Hour=%Hour:~-2%
-Set Day=0%Day%
-Set Day=%Day:~-2%
-Set Month=0%Month%
-Set Month=%Month:~-2%
+for /f %%a in ('powershell -command "Get-Date -Format 'yyyy-MM-dd HH:mm:ss' -AsUTC"') do (set %%a)
+REM set the variables
+Set Year=%Year:~0,4%
+Set Month=%Month:~0,2%
+Set Day=%Day:~0,2%
+Set Hour=%Hour:~0,2%
+Set Minute=%Minute:~0,2%
+Set Second=%Second:~0,2%
 set UTCTIME=%Hour%:%Minute%:%Second%
 set UTCDATE=%Year%%Month%%Day%
 exit /b
@@ -1096,7 +1098,7 @@ echo Begin Distress Transmission? Transmission will take approximately %sostimeo
 choice
 if %errorlevel%==2 goto mainmenu
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN powershell -executionpolicy bypass -file "PTT Trigger.ps1" %COMPort% %sostimeout%
+start /MIN powershell -executionpolicy bypass -file "PTT Trigger %DTRRTS%.ps1" %COMPort% %sostimeout%
 echo SOS Transmission was started by %username% on %date% at %time%>>"%appdata%\SOSLog.log"
 :distreaudloop
 echo.
@@ -1232,7 +1234,7 @@ set file=Audio%session%.wav
 set deletefile=%file%
 echo BEGINNING SOS TRANSMISSION
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN Powershell -executionpolicy bypass -File "PTT Trigger.ps1" %COMPort% %distresstimeout%
+start /MIN Powershell -executionpolicy bypass -File "PTT Trigger %DTRRTS%.ps1" %COMPort% %distresstimeout%
 echo SOS Transmission was started by %username% on %date% at %time%>>"%appdata%\SOSLog.log"
 echo.
 :BasicSOSLoop
@@ -1282,7 +1284,7 @@ goto BasicSOSLoop
 
 :postdistress
 call ps1s.bat /tk "Simple Radio COM Ps1 Serial Interface" >nul
-start /MIN Powershell -executionpolicy bypass -File "PTT Trigger.ps1" %COMPort% %Timeout%
+start /MIN Powershell -executionpolicy bypass -File "PTT Trigger %DTRRTS%.ps1" %COMPort% %Timeout%
 goto mainmenu
 
 :custom
@@ -1345,6 +1347,7 @@ echo.
 echo [92mSettings Menu[97m
 echo.
 echo @set "COMPort=%COMPort%">settings.cmd
+echo @set "DTRRTS=%DTRRTS%">>settings.cmd
 echo @set "Timeout=%Timeout%">>settings.cmd
 echo @set "RadioInput=%RadioInput%">>settings.cmd
 echo @set "AudioCheck=%AudioCheck%">>settings.cmd

@@ -257,7 +257,7 @@ if "!DualOn%value%!"=="1" (
 )
 echo.
 :playbackmenu
-echo 1] Play again
+echo [0m1] Play again
 echo 2] Delete
 echo 3] Export
 echo X] Back

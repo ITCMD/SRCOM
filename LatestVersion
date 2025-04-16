@@ -1,13 +1,21 @@
-SRCOM VERSION [8.2]
+SRCOM VERSION [9.0]
 
-VERSION 8.2 RELEASE NOTES
+VERSION 9.0 RELEASE NOTES
 
-- NEW LOGGING SOFTWARE
-  - SRCOM now comes with SRLog, a simple and very light logging software
-    for Windows systems. It supports contests such as field day, as well
-    as Satellite work. SRCOM also automatically checks for duplicate
-    contacts and pulls information from hamdb. To learn more or download
-    SRLog indipendantly, visit https://github.com/ITCMD/SRLog
+- New OS Support
+  - Updated to support Windows 11
+
+- Features
+  - Added DTR support for AIOB and AIOC
     
 - Bug Fixes
-  - Fixed a bug in SRLog where the State would show up as "NONE"
+  - Fixed a bug in SRCOM where hamlib radios couldn't be selected
+  - Removed all WMIC commands as it is depreciated in leiu of
+    Powershell get-wmi commands
+  - Fixed a typo in SRLOG where O-Name was @-name
+  - Stopped Rig Control from launching since it's not working yet
+  - Re-evaluated Life Choices
+  - Updated Startup Screen to be more pleasant and informative
+  - Launching with conhost.exe instead of cmd.exe to support
+    window sizes on Windows 11. Added a vbs script to do the
+    actual launching part
